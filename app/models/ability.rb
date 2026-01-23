@@ -13,14 +13,20 @@ class Ability
       # Sales executive can read all users and update their own profile
       can :read, User
       can :update, User, id: user.id
+      # Sales executive can manage customers
+      can :manage, Customer
     elsif user.agent?
       # Agent can read their own profile and update it
       can :read, User, id: user.id
       can :update, User, id: user.id
+      # Agent can manage customers
+      can :manage, Customer
     elsif user.accountant?
       # Accountant can read all users and update their own profile
       can :read, User
       can :update, User, id: user.id
+      # Accountant can read customers
+      can :read, Customer
     end
 
     # Define abilities for the user here. For example:

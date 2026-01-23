@@ -14,6 +14,9 @@ Rails.application.routes.draw do
           put 'role', to: 'users#update_role'
         end
       end
+
+      # Customer management routes
+      resources :customers, only: [:index, :show, :create, :update, :destroy]
     end
   end
 

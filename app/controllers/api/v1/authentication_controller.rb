@@ -9,13 +9,28 @@ class Api::V1::AuthenticationController < ApplicationController
     if @user&.valid_for_authentication? { @user.valid_password?(login_params[:password]) }
       if @user.active_for_authentication?
         @user.update_last_activity!
-        @message = 'Login successful'
         
         # Generate JWT token manually
         token = generate_jwt_token(@user)
         response.headers['Authorization'] = "Bearer #{token}"
         
-        render :login, status: :ok
+        render json: {
+          message: 'Login successful',
+          user: {
+            id: @user.id,
+            name: @user.name,
+            email: @user.email,
+            role: @user.role,
+            last_activity_at: @user.last_activity_at,
+            created_at: @user.created_at,
+            updated_at: @user.updated_at,
+            locked: @user.locked?,
+            expired: @user.expired?,
+            sign_in_count: @user.sign_in_count,
+            current_sign_in_at: @user.current_sign_in_at,
+            last_sign_in_at: @user.last_sign_in_at
+          }
+        }, status: :ok
       else
         render json: { 
           error: @user.inactive_message == :expired ? 
@@ -41,13 +56,28 @@ class Api::V1::AuthenticationController < ApplicationController
   # GET /api/v1/auth/me
   def me
     authenticate_request!
-    @user = current_user
-    render :me, status: :ok
+    render json: {
+      id: current_user.id,
+      name: current_user.name,
+      email: current_user.email,
+      role: current_user.role,
+      last_activity_at: current_user.last_activity_at,
+      created_at: current_user.created_at,
+      updated_at: current_user.updated_at,
+      locked: current_user.locked?,
+      expired: current_user.expired?,
+      sign_in_count: current_user.sign_in_count,
+      current_sign_in_at: current_user.current_sign_in_at,
+      last_sign_in_at: current_user.last_sign_in_at
+    }, status: :ok
   end
 
   private
 
   def generate_jwt_token(user)
+    secret_key = Rails.application.credentials.devise_jwt_secret_key || 
+                 ENV['DEVISE_JWT_SECRET_KEY']
+    
     JWT.encode(
       {
         sub: user.id,
@@ -57,7 +87,7 @@ class Api::V1::AuthenticationController < ApplicationController
         exp: 30.days.from_now.to_i,
         jti: SecureRandom.uuid
       },
-      Rails.application.credentials.devise_jwt_secret_key || ENV['DEVISE_JWT_SECRET_KEY'],
+      secret_key,
       'HS256'
     )
   end

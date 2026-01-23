@@ -22,6 +22,12 @@ gem 'devise-jwt', '~> 0.12.0'
 # Authorization with CanCanCan
 gem 'cancancan', '~> 3.6'
 
+# Pagination
+gem 'kaminari', '~> 1.2'
+
+# Soft delete
+gem 'acts_as_paranoid', '~> 0.10.0'
+
 # Use ActiveStorage variant
 # gem 'mini_magick', '~> 4.8'
 
