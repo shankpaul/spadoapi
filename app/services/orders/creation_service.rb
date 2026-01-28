@@ -91,6 +91,7 @@ module Orders
           price: price,
           vehicle_type: package_params[:vehicle_type] || package.vehicle_type,
           discount: discount,
+          discount_type: package_params[:discount_type],
           notes: package_params[:notes]
         )
         # total_price calculated by callback
@@ -114,7 +115,8 @@ module Orders
           addon: addon,
           quantity: addon_params[:quantity] || 1,
           price: price,
-          discount: discount
+          discount: discount,
+          discount_type: addon_params[:discount_type]
         )
         # total_price calculated by callback
         order_addon.save!

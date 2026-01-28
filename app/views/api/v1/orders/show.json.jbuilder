@@ -5,7 +5,7 @@ json.order do
   
   # Include packages with details
   json.packages @order.order_packages do |order_package|
-    json.extract! order_package, :id, :quantity, :price, :vehicle_type, :discount, :total_price, :notes
+    json.extract! order_package, :id, :quantity, :price, :vehicle_type, :discount, :discount_type, :total_price, :notes
     json.package do
       json.extract! order_package.package, :id, :name, :description, :unit_price, :features
     end
@@ -13,7 +13,7 @@ json.order do
   
   # Include addons with details
   json.addons @order.order_addons do |order_addon|
-    json.extract! order_addon, :id, :quantity, :price, :discount, :total_price
+    json.extract! order_addon, :id, :quantity, :price, :discount, :discount_type, :total_price
     json.addon do
       json.extract! order_addon.addon, :id, :name, :description, :price
     end

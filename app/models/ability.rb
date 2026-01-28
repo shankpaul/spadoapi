@@ -20,7 +20,7 @@ class Ability
       can :manage, Addon
       # Sales executive can manage all orders and add feedback
       can :manage, Order
-      can :add_feedback, Order
+      can :feedback, Order
     elsif user.agent?
       # Agent can read their own profile and update it
       can :read, User, id: user.id

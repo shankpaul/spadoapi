@@ -58,12 +58,13 @@ module Orders
     end
 
     def can_transition?
+      # Define role-based permissions for status transitions
       case new_status
-      when :mark_tentative, :confirm_booking
+      when :mark_tentative, :confirm_booking, :tentative, :confirmed
         current_user.admin? || current_user.sales_executive?
-      when :start_service, :complete_service
+      when :start_service, :complete_service, :in_progress, :completed
         current_user.admin? || current_user.sales_executive? || current_user.agent?
-      when :cancel_order
+      when :cancel_order, :cancelled
         current_user.admin? || current_user.sales_executive?
       else
         false
@@ -76,12 +77,12 @@ module Orders
 
     def update_additional_fields
       case new_status
-      when :cancelled
+      when :cancelled, :cancel_order
         order.cancelled_by = current_user
         order.cancel_reason = additional_params[:cancel_reason]
-      when :start_service
+      when :start_service, :in_progress
         order.actual_start_time = additional_params[:actual_start_time] || Time.current
-      when :complete_service
+      when :complete_service, :completed
         order.actual_end_time = additional_params[:actual_end_time] || Time.current
       end
     end
@@ -90,7 +91,7 @@ module Orders
       # Map new_status to AASM events
       event = case new_status
               when :tentative then :mark_tentative
-              when :booked then :confirm_booking
+              when :confirmed then :confirm_booking
               when :in_progress then :start_service
               when :completed then :complete_service
               when :cancelled then :cancel_order

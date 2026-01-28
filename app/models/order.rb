@@ -23,7 +23,6 @@ class Order < ApplicationRecord
   validates :order_number, presence: true, uniqueness: true
   validates :customer_id, presence: true
   validates :contact_phone, presence: true
-  validates :address_line1, presence: true
   validates :area, presence: true
   validates :latitude, numericality: { greater_than_or_equal_to: -90, less_than_or_equal_to: 90, allow_nil: true }
   validates :longitude, numericality: { greater_than_or_equal_to: -180, less_than_or_equal_to: 180, allow_nil: true }

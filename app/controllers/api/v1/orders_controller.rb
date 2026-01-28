@@ -1,7 +1,7 @@
 class Api::V1::OrdersController < ApplicationController
   before_action :authenticate_request!
   load_and_authorize_resource except: [:create]
-  before_action :set_order, only: [:show, :update, :destroy, :assign, :update_status, :cancel, :add_feedback, :reassignments, :timeline]
+  before_action :set_order, only: [:show, :update, :destroy, :assign, :update_status, :cancel, :feedback, :reassignments, :timeline]
   respond_to :json
 
   # GET /api/v1/orders
@@ -116,8 +116,8 @@ class Api::V1::OrdersController < ApplicationController
     end
   end
 
-  # POST /api/v1/orders/:id/add_feedback
-  def add_feedback
+  # POST /api/v1/orders/:id/feedback
+  def feedback
     unless @order.can_add_feedback?
       return render json: { errors: ["Feedback can only be added to completed orders"] }, status: :unprocessable_entity
     end
@@ -251,12 +251,19 @@ class Api::V1::OrdersController < ApplicationController
     order_data[:assigned_to_id] = params[:agent_id] || base_params[:agent_id] || base_params[:assigned_to_id]
     
     # Handle booking_time (single field) or booking_time_from/to
+    # Combine time with booking_date to create proper datetime
+    booking_date = base_params[:booking_date] || params[:booking_date]
+    
     if params[:booking_time].present?
-      order_data[:booking_time_from] = params[:booking_time]
-      order_data[:booking_time_to] = params[:booking_time]
+      time_value = parse_time_with_date(params[:booking_time], booking_date)
+      order_data[:booking_time_from] = time_value
+      order_data[:booking_time_to] = time_value
     else
-      order_data[:booking_time_from] = base_params[:booking_time_from] || params[:booking_time_from]
-      order_data[:booking_time_to] = base_params[:booking_time_to] || params[:booking_time_to]
+      time_from = base_params[:booking_time_from] || params[:booking_time_from]
+      time_to = base_params[:booking_time_to] || params[:booking_time_to]
+      
+      order_data[:booking_time_from] = parse_time_with_date(time_from, booking_date) if time_from.present?
+      order_data[:booking_time_to] = parse_time_with_date(time_to, booking_date) if time_to.present?
     end
     
     # Handle nested address hash
@@ -358,5 +365,23 @@ class Api::V1::OrdersController < ApplicationController
 
   def feedback_params
     params.require(:order).permit(:rating, :comments)
+  end
+
+  def parse_time_with_date(time_str, date_str)
+    return nil if time_str.blank? || date_str.blank?
+    
+    # Parse the date
+    date = date_str.is_a?(Date) ? date_str : Date.parse(date_str.to_s)
+    
+    # If time_str is already a datetime, return it
+    return time_str if time_str.is_a?(DateTime) || time_str.is_a?(Time)
+    
+    # Parse time string (format: "12:30" or "12:30:00")
+    time_parts = time_str.to_s.split(':')
+    hour = time_parts[0].to_i
+    minute = time_parts[1].to_i
+    
+    # Combine date and time
+    Time.zone.local(date.year, date.month, date.day, hour, minute)
   end
 end

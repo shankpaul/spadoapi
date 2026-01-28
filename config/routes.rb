@@ -27,8 +27,9 @@ Rails.application.routes.draw do
         member do
           post 'assign'
           post 'update_status'
+          patch 'status', to: 'orders#update_status'
           post 'cancel'
-          post 'add_feedback'
+          post 'feedback'
           get 'reassignments'
           get 'timeline'
         end

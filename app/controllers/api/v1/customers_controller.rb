@@ -68,6 +68,15 @@ class Api::V1::CustomersController < ApplicationController
       )
     end
 
+    # Quick search by name or phone with q parameter
+    if params[:q].present?
+      search_term = "%#{params[:q]}%"
+      customers = customers.where(
+        'name ILIKE ? OR phone ILIKE ?',
+        search_term, search_term
+      )
+    end
+
     customers
   end
 

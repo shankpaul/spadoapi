@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_26_000001) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_28_141127) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,6 +81,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_26_000001) do
     t.decimal "total_price", precision: 10, scale: 2, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "discount_type"
     t.index ["addon_id"], name: "index_order_addons_on_addon_id"
     t.index ["order_id", "addon_id"], name: "index_order_addons_on_order_id_and_addon_id"
     t.index ["order_id"], name: "index_order_addons_on_order_id"
@@ -97,6 +98,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_26_000001) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "discount_type"
     t.index ["order_id", "package_id"], name: "index_order_packages_on_order_id_and_package_id"
     t.index ["order_id"], name: "index_order_packages_on_order_id"
     t.index ["package_id"], name: "index_order_packages_on_package_id"
