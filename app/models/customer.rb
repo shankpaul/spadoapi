@@ -5,6 +5,7 @@ class Customer < ApplicationRecord
   validates :name, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true }
   validates :phone, presence: true
+  validates :address_line1, presence: true
   validates :latitude, numericality: { greater_than_or_equal_to: -90, less_than_or_equal_to: 90, allow_nil: true }
   validates :longitude, numericality: { greater_than_or_equal_to: -180, less_than_or_equal_to: 180, allow_nil: true }
 
@@ -16,7 +17,7 @@ class Customer < ApplicationRecord
 
   # Methods
   def full_address
-    [area, city, district, state].compact.join(', ')
+    [address_line1, address_line2, area, city, district, state].compact.reject(&:blank?).join(', ')
   end
 
   def coordinates

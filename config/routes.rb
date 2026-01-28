@@ -17,6 +17,25 @@ Rails.application.routes.draw do
 
       # Customer management routes
       resources :customers, only: [:index, :show, :create, :update, :destroy]
+
+      # Package and Addon management routes
+      resources :packages
+      resources :addons
+
+      # Order management routes
+      resources :orders do
+        member do
+          post 'assign'
+          post 'update_status'
+          post 'cancel'
+          post 'add_feedback'
+          get 'reassignments'
+          get 'timeline'
+        end
+        collection do
+          get 'calendar'
+        end
+      end
     end
   end
 

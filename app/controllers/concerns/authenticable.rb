@@ -31,6 +31,7 @@ module Authenticable
         }
       )
       @current_user = User.find(decoded[0]['sub'])
+      Current.user = @current_user
     rescue JWT::InvalidAudError => e
       render_unauthorized("Invalid audience: #{e.message}")
     rescue JWT::DecodeError => e

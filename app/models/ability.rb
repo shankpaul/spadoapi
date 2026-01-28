@@ -15,18 +15,35 @@ class Ability
       can :update, User, id: user.id
       # Sales executive can manage customers
       can :manage, Customer
+      # Sales executive can manage packages and addons
+      can :manage, Package
+      can :manage, Addon
+      # Sales executive can manage all orders and add feedback
+      can :manage, Order
+      can :add_feedback, Order
     elsif user.agent?
       # Agent can read their own profile and update it
       can :read, User, id: user.id
       can :update, User, id: user.id
       # Agent can manage customers
       can :manage, Customer
+      # Agent can read packages and addons
+      can :read, Package
+      can :read, Addon
+      # Agent can read assigned orders and update status/actual times/notes
+      can :read, Order, assigned_to_id: user.id
+      can [:update_status, :update], Order, assigned_to_id: user.id
     elsif user.accountant?
       # Accountant can read all users and update their own profile
       can :read, User
       can :update, User, id: user.id
       # Accountant can read customers
       can :read, Customer
+      # Accountant can read packages and addons
+      can :read, Package
+      can :read, Addon
+      # Accountant can read all orders (read-only)
+      can :read, Order
     end
 
     # Define abilities for the user here. For example:
