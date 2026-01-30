@@ -1,7 +1,7 @@
 class Api::V1::OrdersController < ApplicationController
   before_action :authenticate_request!
   load_and_authorize_resource except: [:create]
-  before_action :set_order, only: [:show, :update, :destroy, :assign, :update_status, :cancel, :feedback, :reassignments, :timeline]
+  before_action :set_order, only: [:show, :update, :destroy, :assign, :reassign, :update_status, :cancel, :feedback, :reassignments, :timeline]
   respond_to :json
 
   # GET /api/v1/orders
@@ -69,6 +69,29 @@ class Api::V1::OrdersController < ApplicationController
       render :show
     else
       render json: { errors: service.errors }, status: :unprocessable_entity
+    end
+  end
+
+  # POST /api/v1/orders/:id/reassign
+  def reassign
+    agent_id = params[:agent_id]
+    
+    # If agent_id is nil or empty, unassign the order
+    if agent_id.blank?
+      @order.update(assigned_to_id: nil)
+      @message = "Order unassigned successfully"
+      render :show
+    else
+      service = Orders::AssignmentService.new(@order, agent_id, current_user, params[:notes])
+      result = service.assign
+
+      if service.success?
+        @order = result
+        @message = "Order reassigned successfully"
+        render :show
+      else
+        render json: { errors: service.errors }, status: :unprocessable_entity
+      end
     end
   end
 

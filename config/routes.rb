@@ -26,6 +26,7 @@ Rails.application.routes.draw do
       resources :orders do
         member do
           post 'assign'
+          post 'reassign'
           post 'update_status'
           patch 'status', to: 'orders#update_status'
           post 'cancel'
