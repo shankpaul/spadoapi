@@ -36,14 +36,16 @@ class Order < ApplicationRecord
   # Callbacks
   before_validation :generate_order_number, on: :create
   before_validation :copy_gst_percentage_from_settings, on: :create
+  after_create :update_customer_last_booked_at
   after_update :track_assignment_change, if: :saved_change_to_assigned_to_id?
+  after_update :update_customer_last_booked_at, if: :saved_change_to_booking_date?
 
   # Scopes
   scope :by_status, ->(status) { where(status: status) }
   scope :assigned_to, ->(user_id) { where(assigned_to_id: user_id) }
   scope :by_date_range, ->(from, to) { where(booking_date: from..to) }
   scope :by_customer, ->(customer_id) { where(customer_id: customer_id) }
-  scope :with_associations, -> { includes(:customer, :bookable, :assigned_to, :packages, :addons, :order_packages, :order_addons) }
+  scope :with_associations, -> { includes(:customer, :assigned_to, :packages, :addons, :order_packages, :order_addons) }
 
   # AASM State Machine
   aasm column: :status do
@@ -211,5 +213,9 @@ class Order < ApplicationRecord
       status: status,
       notes: notes_text
     )
+  end
+
+  def update_customer_last_booked_at
+    customer.update_column(:last_booked_at, Time.current) if customer.present?
   end
 end

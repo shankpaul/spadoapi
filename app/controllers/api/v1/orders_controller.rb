@@ -6,6 +6,9 @@ class Api::V1::OrdersController < ApplicationController
 
   # GET /api/v1/orders
   def index
+    # Filter by assigned agent if user is an agent
+    @orders = @orders.assigned_to(current_user.id) if current_user.agent?
+    
     @orders = apply_filters(@orders)
     @orders = @orders.with_associations
                      .order(created_at: :desc)
@@ -244,6 +247,19 @@ class Api::V1::OrdersController < ApplicationController
     orders = orders.by_customer(params[:customer_id]) if params[:customer_id].present?
     orders = orders.by_date_range(params[:from_date], params[:to_date]) if params[:from_date] && params[:to_date]
     orders = orders.where(bookable_type: params[:bookable_type]) if params[:bookable_type].present?
+    
+    # General search across multiple fields with OR logic
+    if params[:search].present?
+      search_term = "%#{params[:search]}%"
+      orders = orders.joins(:customer).where(
+        'LOWER(orders.order_number) LIKE LOWER(?) OR LOWER(customers.phone) LIKE LOWER(?) OR LOWER(customers.name) LIKE LOWER(?)',
+        search_term, search_term, search_term
+      )
+    end
+    
+    # Specific field searches
+    # orders = orders.where('LOWER(order_number) LIKE LOWER(?)', "%#{params[:order_number]}%") if params[:order_number].present?
+    # orders = orders.joins(:customer).where('LOWER(customers.phone) LIKE LOWER(?)', "%#{params[:customer_phone]}%") if params[:customer_phone].present?
     orders
   end
 
