@@ -1,6 +1,6 @@
 json.orders do
   json.array! @orders do |order|
-    json.partial! 'order_basic', order: order
+    json.partial! 'api/v1/orders/order_basic', order: order
     
     # Include package and addon counts in list view
     json.packages_count order.order_packages.size

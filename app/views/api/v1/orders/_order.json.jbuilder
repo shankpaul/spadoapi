@@ -34,6 +34,7 @@ json.extract! order,
               :feedback_submitted_at,
               :created_at,
               :updated_at
+              :subscription_id
 
 json.full_address order.full_address
 json.coordinates order.coordinates

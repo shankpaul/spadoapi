@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_28_141127) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_04_165157) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -153,6 +153,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_28_141127) do
     t.datetime "deleted_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "subscription_id"
     t.index ["assigned_to_id", "booking_date", "status"], name: "index_orders_on_agent_calendar"
     t.index ["assigned_to_id"], name: "index_orders_on_assigned_to_id"
     t.index ["bookable_type", "bookable_id"], name: "index_orders_on_bookable"
@@ -163,6 +164,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_28_141127) do
     t.index ["deleted_at"], name: "index_orders_on_deleted_at"
     t.index ["order_number"], name: "index_orders_on_order_number", unique: true
     t.index ["status"], name: "index_orders_on_status"
+    t.index ["subscription_id"], name: "index_orders_on_subscription_id"
   end
 
   create_table "packages", force: :cascade do |t|
@@ -176,6 +178,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_28_141127) do
     t.datetime "updated_at", null: false
     t.text "features", default: [], array: true
     t.integer "duration_minutes", comment: "Estimated time to complete the service in minutes"
+    t.boolean "subscription_enabled", default: false, null: false
+    t.decimal "subscription_price", precision: 10, scale: 2
+    t.integer "max_washes_per_month"
+    t.integer "min_subscription_months", default: 1
     t.index ["active"], name: "index_packages_on_active"
     t.index ["deleted_at"], name: "index_packages_on_deleted_at"
     t.index ["vehicle_type"], name: "index_packages_on_vehicle_type"
@@ -189,6 +195,86 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_28_141127) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_settings_on_key", unique: true
+  end
+
+  create_table "subscription_addons", force: :cascade do |t|
+    t.bigint "subscription_id", null: false
+    t.bigint "addon_id", null: false
+    t.integer "quantity", default: 1, null: false
+    t.decimal "price", precision: 10, scale: 2, null: false
+    t.decimal "unit_price", precision: 10, scale: 2, null: false
+    t.decimal "discount", precision: 10, scale: 2
+    t.string "discount_type"
+    t.decimal "discount_value", precision: 10, scale: 2
+    t.decimal "total_price", precision: 10, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["addon_id"], name: "index_subscription_addons_on_addon_id"
+    t.index ["subscription_id", "addon_id"], name: "index_subscription_addons_on_subscription_id_and_addon_id"
+    t.index ["subscription_id"], name: "index_subscription_addons_on_subscription_id"
+  end
+
+  create_table "subscription_orders", force: :cascade do |t|
+    t.bigint "subscription_id", null: false
+    t.bigint "order_id"
+    t.date "scheduled_date", null: false
+    t.datetime "generated_at"
+    t.string "status", default: "pending_generation"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.time "time_from"
+    t.time "time_to"
+    t.index ["order_id"], name: "index_subscription_orders_on_order_id"
+    t.index ["status"], name: "index_subscription_orders_on_status"
+    t.index ["subscription_id", "scheduled_date"], name: "idx_on_subscription_id_scheduled_date_bdda95b267", unique: true
+    t.index ["subscription_id"], name: "index_subscription_orders_on_subscription_id"
+  end
+
+  create_table "subscription_packages", force: :cascade do |t|
+    t.bigint "subscription_id", null: false
+    t.bigint "package_id", null: false
+    t.integer "quantity", default: 1, null: false
+    t.decimal "price", precision: 10, scale: 2, null: false
+    t.decimal "unit_price", precision: 10, scale: 2, null: false
+    t.string "vehicle_type", null: false
+    t.decimal "discount", precision: 10, scale: 2
+    t.string "discount_type"
+    t.decimal "discount_value", precision: 10, scale: 2
+    t.decimal "total_price", precision: 10, scale: 2, null: false
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["package_id"], name: "index_subscription_packages_on_package_id"
+    t.index ["subscription_id", "package_id"], name: "index_subscription_packages_on_subscription_id_and_package_id"
+    t.index ["subscription_id"], name: "index_subscription_packages_on_subscription_id"
+  end
+
+  create_table "subscriptions", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "vehicle_type", null: false
+    t.string "status", default: "active", null: false
+    t.date "start_date", null: false
+    t.date "end_date", null: false
+    t.integer "months_duration", null: false
+    t.decimal "subscription_amount", precision: 10, scale: 2, null: false
+    t.decimal "payment_amount", precision: 10, scale: 2, default: "0.0"
+    t.date "payment_date"
+    t.string "payment_status", default: "pending"
+    t.string "payment_method"
+    t.text "notes"
+    t.bigint "created_by_id", null: false
+    t.datetime "deleted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.jsonb "washing_schedules", default: []
+    t.string "map_url"
+    t.string "area"
+    t.integer "number_of_orders", default: 0, null: false
+    t.integer "completed_no_orders", default: 0, null: false
+    t.index ["created_by_id"], name: "index_subscriptions_on_created_by_id"
+    t.index ["customer_id"], name: "index_subscriptions_on_customer_id"
+    t.index ["deleted_at"], name: "index_subscriptions_on_deleted_at"
+    t.index ["status"], name: "index_subscriptions_on_status"
   end
 
   create_table "users", force: :cascade do |t|
@@ -228,6 +314,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_28_141127) do
   add_foreign_key "order_status_logs", "orders"
   add_foreign_key "order_status_logs", "users", column: "changed_by_id"
   add_foreign_key "orders", "customers"
+  add_foreign_key "orders", "subscriptions"
   add_foreign_key "orders", "users", column: "assigned_to_id"
   add_foreign_key "orders", "users", column: "cancelled_by_id"
+  add_foreign_key "subscription_addons", "addons"
+  add_foreign_key "subscription_addons", "subscriptions"
+  add_foreign_key "subscription_orders", "orders"
+  add_foreign_key "subscription_orders", "subscriptions"
+  add_foreign_key "subscription_packages", "packages"
+  add_foreign_key "subscription_packages", "subscriptions"
+  add_foreign_key "subscriptions", "customers"
+  add_foreign_key "subscriptions", "users", column: "created_by_id"
 end

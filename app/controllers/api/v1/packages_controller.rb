@@ -11,6 +11,7 @@ class Api::V1::PackagesController < ApplicationController
     
     @packages = @packages.active if params[:active] == 'true'
     @packages = @packages.by_vehicle_type(params[:vehicle_type]) if params[:vehicle_type].present?
+    @packages = @packages.subscription_enabled if params[:subscription_enabled] == 'true'
     
     @packages = @packages.page(params[:page]).per(params[:per_page] || 25)
   end
@@ -54,6 +55,18 @@ class Api::V1::PackagesController < ApplicationController
   end
 
   def package_params
-    params.require(:package).permit(:name, :description, :unit_price, :vehicle_type, :active, features: [])
+    params.require(:package).permit(
+      :name, 
+      :description, 
+      :unit_price, 
+      :vehicle_type, 
+      :active, 
+      :subscription_enabled,
+      :subscription_price,
+      :max_washes_per_month,
+      :min_subscription_months,
+      :duration_minutes,
+      features: []
+    )
   end
 end

@@ -11,6 +11,7 @@ class Order < ApplicationRecord
   belongs_to :bookable, polymorphic: true
   belongs_to :assigned_to, class_name: 'User', optional: true
   belongs_to :cancelled_by, class_name: 'User', optional: true
+  belongs_to :subscription, optional: true
   
   has_many :order_packages, dependent: :destroy
   has_many :packages, through: :order_packages
@@ -18,6 +19,7 @@ class Order < ApplicationRecord
   has_many :addons, through: :order_addons
   has_many :order_status_logs, dependent: :destroy
   has_many :assignment_histories, dependent: :destroy
+  has_many :subscription_orders, dependent: :destroy
 
   # Validations
   validates :order_number, presence: true, uniqueness: true
@@ -39,6 +41,7 @@ class Order < ApplicationRecord
   after_create :update_customer_last_booked_at
   after_update :track_assignment_change, if: :saved_change_to_assigned_to_id?
   after_update :update_customer_last_booked_at, if: :saved_change_to_booking_date?
+  after_update :increment_subscription_completed_count, if: :saved_change_to_status_and_completed?
 
   # Scopes
   scope :by_status, ->(status) { where(status: status) }
@@ -217,5 +220,14 @@ class Order < ApplicationRecord
 
   def update_customer_last_booked_at
     customer.update_column(:last_booked_at, Time.current) if customer.present?
+  end
+
+  def saved_change_to_status_and_completed?
+    saved_change_to_status? && completed?
+  end
+
+  def increment_subscription_completed_count
+    return unless subscription.present?
+    subscription.increment_completed_orders!
   end
 end

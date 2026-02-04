@@ -22,6 +22,17 @@ Rails.application.routes.draw do
       resources :packages
       resources :addons
 
+      # Subscription management routes
+      resources :subscriptions do
+        member do
+          post 'pause'
+          post 'resume'
+          post 'cancel'
+          post 'update_payment'
+          get 'orders'
+        end
+      end
+
       # Order management routes
       resources :orders do
         member do

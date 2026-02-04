@@ -1,6 +1,9 @@
 class Customer < ApplicationRecord
   acts_as_paranoid
 
+  # Associations
+  has_many :subscriptions, dependent: :restrict_with_error
+
   # Validations
   validates :name, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true }

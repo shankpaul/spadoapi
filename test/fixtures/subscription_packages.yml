@@ -1,0 +1,27 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  subscription: one
+  package: one
+  quantity: 1
+  price: 9.99
+  unit_price: 9.99
+  vehicle_type: 1
+  discount: 9.99
+  discount_type: MyString
+  discount_value: 9.99
+  total_price: 9.99
+  notes: MyText
+
+two:
+  subscription: two
+  package: two
+  quantity: 1
+  price: 9.99
+  unit_price: 9.99
+  vehicle_type: 1
+  discount: 9.99
+  discount_type: MyString
+  discount_value: 9.99
+  total_price: 9.99
+  notes: MyText

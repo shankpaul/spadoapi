@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  subscription: one
+  order: one
+  scheduled_date: 2026-02-01
+  generated_at: 2026-02-01 16:43:56
+  status: MyString
+
+two:
+  subscription: two
+  order: two
+  scheduled_date: 2026-02-01
+  generated_at: 2026-02-01 16:43:56
+  status: MyString

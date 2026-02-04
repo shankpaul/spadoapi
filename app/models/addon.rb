@@ -4,6 +4,8 @@ class Addon < ApplicationRecord
   # Associations
   has_many :order_addons, dependent: :destroy
   has_many :orders, through: :order_addons
+  has_many :subscription_addons, dependent: :destroy
+  has_many :subscriptions, through: :subscription_addons
 
   # Validations
   validates :name, presence: true

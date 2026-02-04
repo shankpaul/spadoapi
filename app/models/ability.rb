@@ -18,6 +18,8 @@ class Ability
       # Sales executive can manage packages and addons
       can :manage, Package
       can :manage, Addon
+      # Sales executive can manage subscriptions
+      can :manage, Subscription
       # Sales executive can manage all orders and add feedback
       can :manage, Order
       can :feedback, Order
@@ -30,6 +32,8 @@ class Ability
       # Agent can read packages and addons
       can :read, Package
       can :read, Addon
+      # Agent can read subscriptions
+      can :read, Subscription
       # Agent can read assigned orders and update status/actual times/notes
       can :read, Order, assigned_to_id: user.id
       can [:update_status, :update], Order, assigned_to_id: user.id
@@ -42,6 +46,8 @@ class Ability
       # Accountant can read packages and addons
       can :read, Package
       can :read, Addon
+      # Accountant can read subscriptions
+      can :read, Subscription
       # Accountant can read all orders (read-only)
       can :read, Order
     end

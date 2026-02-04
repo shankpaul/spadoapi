@@ -79,8 +79,12 @@ module Orders
       params[:packages].each do |package_params|
         package = Package.find(package_params[:package_id])
         
-        # Use unit_price from params or package default
-        price = (package_params[:unit_price] || package_params[:price] || package.unit_price).to_f
+        # Use price from params (0 for subscriptions) or calculate from unit_price
+        if package_params[:price].present?
+          price = package_params[:price].to_f
+        else
+          price = (package_params[:unit_price] || package.unit_price).to_f
+        end
         
         # Calculate discount based on discount_type
         discount = calculate_discount(price, package_params)
@@ -105,8 +109,12 @@ module Orders
       params[:addons].each do |addon_params|
         addon = Addon.find(addon_params[:addon_id])
         
-        # Use unit_price from params or addon default
-        price = (addon_params[:unit_price] || addon_params[:price] || addon.price).to_f
+        # Use price from params (0 for subscriptions) or calculate from unit_price
+        if addon_params[:price].present?
+          price = addon_params[:price].to_f
+        else
+          price = (addon_params[:unit_price] || addon.price).to_f
+        end
         
         # Calculate discount based on discount_type
         discount = calculate_discount(price, addon_params)
@@ -146,6 +154,7 @@ module Orders
       # Don't include status - AASM manages it with initial state
       params.slice(
         :customer_id,
+        :subscription_id,
         :booking_date,
         :booking_time_from,
         :booking_time_to,

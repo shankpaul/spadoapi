@@ -16,6 +16,7 @@ json.extract! order,
               :notes,
               :cancelled_at,
               :cancel_reason,
+              :subscription_id,
               :rating
 
 json.full_address order.full_address
