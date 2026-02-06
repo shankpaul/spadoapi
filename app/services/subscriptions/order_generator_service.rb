@@ -76,6 +76,9 @@ module Subscriptions
       time_from = parse_time_with_date(subscription_order.time_from, scheduled_date)
       time_to = parse_time_with_date(subscription_order.time_to, scheduled_date)
 
+      # Calculate which wash number this is for the subscription
+      wash_number = calculate_wash_number(subscription, subscription_order)
+
       # Prepare packages data from subscription_packages
       packages_data = subscription.subscription_packages.map do |sub_pkg|
         {
@@ -91,8 +94,11 @@ module Subscriptions
         }
       end
 
-      # Prepare addons data from subscription_addons
-      addons_data = subscription.subscription_addons.map do |sub_addon|
+      # Prepare addons data from subscription_addons - only include addons applicable to this wash number
+      addons_data = subscription.subscription_addons.select do |sub_addon|
+        # Include addon if it applies to this wash number
+        sub_addon.applies_to_wash?(wash_number)
+      end.map do |sub_addon|
         {
           addon_id: sub_addon.addon_id,
           quantity: sub_addon.quantity,
@@ -121,7 +127,7 @@ module Subscriptions
         latitude: customer.latitude,
         longitude: customer.longitude,
         map_link: subscription.map_url || customer.map_link,
-        notes: "Auto-generated from subscription ##{subscription.id}",
+        notes: "Auto-generated from subscription ##{subscription.id} (Wash ##{wash_number})",
         status: :tentative,
         assigned_to_id: nil, # No agent assignment initially
         packages: packages_data,
@@ -129,7 +135,7 @@ module Subscriptions
       }
 
       # Use the existing Orders::CreationService
-      service = Orders::CreationService.new(order_data, subscription.created_by)
+      service = Orders::CreationService.new(order_data, subscription.created_by, bookable_entity: subscription)
       order = service.create
 
       if service.success?
@@ -140,6 +146,17 @@ module Subscriptions
           service.errors.each { |error| o.errors.add(:base, error) }
         end
       end
+    end
+
+    # Calculate which wash number this order represents in the subscription sequence
+    def calculate_wash_number(subscription, current_subscription_order)
+      # Get all subscription orders for this subscription ordered by scheduled date
+      ordered_subscription_orders = subscription.subscription_orders.order(scheduled_date: :asc)
+      
+      # Find the index of the current subscription order (1-based)
+      wash_number = ordered_subscription_orders.index(current_subscription_order).to_i + 1
+      
+      wash_number
     end
 
     def parse_time_with_date(time_value, date)

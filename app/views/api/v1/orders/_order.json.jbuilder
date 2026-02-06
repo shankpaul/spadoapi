@@ -33,7 +33,7 @@ json.extract! order,
               :comments,
               :feedback_submitted_at,
               :created_at,
-              :updated_at
+              :updated_at,
               :subscription_id
 
 json.full_address order.full_address

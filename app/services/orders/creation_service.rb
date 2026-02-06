@@ -2,22 +2,23 @@ module Orders
   class CreationService
     attr_reader :params, :current_user, :order, :errors
 
-    def initialize(params, current_user)
+    def initialize(params, current_user, bookable_entity: nil)
       @params = params
       @current_user = current_user
+      @bookable_entity = bookable_entity
       @errors = []
     end
 
-    def self.call(params, current_user)
-      new(params, current_user).create
+    def self.call(params, current_user, bookable_entity: nil)
+      new(params, current_user, bookable_entity: bookable_entity).create
     end
 
     def create
       max_retries = 3
       retry_count = 0
 
-      # begin
-      #   ActiveRecord::Base.transaction do
+      begin
+        ActiveRecord::Base.transaction do
           create_order
           copy_address_from_customer
           create_packages
@@ -25,23 +26,23 @@ module Orders
           calculate_totals
           
           @order
-      #   end
-      # rescue ActiveRecord::RecordNotUnique => e
-      #   retry_count += 1
-      #   if retry_count < max_retries
-      #     sleep(0.1 * retry_count) # Brief delay before retry
-      #     retry
-      #   else
-      #     @errors << "Unable to generate unique order number after #{max_retries} attempts. Please try again."
-      #     nil
-      #   end
-      # rescue ActiveRecord::RecordInvalid => e
-      #   @errors << e.message
-      #   nil
-      # rescue => e
-      #   @errors << e.message
-      #   nil
-      # end
+        end
+      rescue ActiveRecord::RecordNotUnique => e
+        retry_count += 1
+        if retry_count < max_retries
+          sleep(0.1 * retry_count) # Brief delay before retry
+          retry
+        else
+          @errors << "Unable to generate unique order number after #{max_retries} attempts. Please try again."
+          nil
+        end
+      rescue ActiveRecord::RecordInvalid => e
+        @errors << e.message
+        nil
+      rescue => e
+        @errors << e.message
+        nil
+      end
     end
 
     def success?
@@ -52,7 +53,7 @@ module Orders
 
     def create_order
       @order = Order.new(order_params)
-      @order.bookable = current_user
+      @order.bookable = @bookable_entity || current_user
       
       # Set address fields from params or customer before validation
       customer = Customer.find(params[:customer_id])

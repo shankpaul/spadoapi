@@ -154,6 +154,7 @@ module Subscriptions
         discount = addon_data[:discount]
         discount_type = addon_data[:discount_type]
         discount_value = addon_data[:discount_value] || 0
+        applicable_wash_numbers = addon_data[:applicable_wash_numbers] || []
         
         subscription_addon = @subscription.subscription_addons.build(
           addon_id: addon_data[:addon_id],
@@ -162,7 +163,8 @@ module Subscriptions
           price: price,
           discount: discount,
           discount_type: discount_type,
-          discount_value: discount_value
+          discount_value: discount_value,
+          applicable_wash_numbers: applicable_wash_numbers
         )
         
         unless subscription_addon.save

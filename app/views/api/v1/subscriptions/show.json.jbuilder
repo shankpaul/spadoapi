@@ -36,6 +36,7 @@ json.subscription do
       json.discount_type sub_addon.discount_type
       json.discount_value sub_addon.discount_value
       json.total_price sub_addon.total_price
+      json.applicable_wash_numbers sub_addon.applicable_wash_numbers || []
     end
   end
   

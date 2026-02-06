@@ -8,7 +8,7 @@ class Order < ApplicationRecord
 
   # Associations
   belongs_to :customer
-  belongs_to :bookable, polymorphic: true
+  belongs_to :bookable, polymorphic: true, optional: true
   belongs_to :assigned_to, class_name: 'User', optional: true
   belongs_to :cancelled_by, class_name: 'User', optional: true
   belongs_to :subscription, optional: true
@@ -157,7 +157,9 @@ class Order < ApplicationRecord
       errors.add(:booking_time_to, "must be after booking start time")
     end
 
-    if booking_date && booking_date < Date.current
+    # Allow past dates for subscription-generated orders (tentative status)
+    # Only validate for new bookings that are not from subscriptions
+    if booking_date && booking_date < Date.current && !subscription_id.present? && !tentative?
       errors.add(:booking_date, "cannot be in the past")
     end
   end

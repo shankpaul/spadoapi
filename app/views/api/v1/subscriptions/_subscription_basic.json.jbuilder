@@ -7,6 +7,7 @@
   
   json.customer do
     json.name subscription.customer.name
+    json.phone subscription.customer.phone
   end
   
   json.vehicle_type subscription.vehicle_type
