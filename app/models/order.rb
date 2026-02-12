@@ -83,7 +83,7 @@ class Order < ApplicationRecord
 
     # in_progress -> completed (agent/sales_executive/admin)
     event :complete_service do
-      transitions from: :in_progress, to: :completed
+      transitions from: [:confirmed, :in_progress], to: :completed
       after do
         update_column(:actual_end_time, Time.current) if actual_end_time.blank?
         log_status_change(:in_progress, :completed)
