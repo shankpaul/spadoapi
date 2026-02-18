@@ -43,6 +43,18 @@ gem 'bootsnap', require: false
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
 gem 'rack-cors'
 
+# Background jobs with Sidekiq
+gem 'sidekiq', '~> 7.2'
+
+# AWS SDK for S3 file uploads
+gem 'aws-sdk-s3', '~> 1.143', require: false
+
+# Image processing
+gem 'image_processing', '~> 1.12'
+
+# HTTP client for API requests
+gem 'httparty', '~> 0.21'
+
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]

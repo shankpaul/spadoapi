@@ -1,0 +1,19 @@
+:concurrency: 5
+
+:queues:
+  - default
+  - mailers
+  - active_storage_analysis
+  - active_storage_purge
+
+# Production configuration
+production:
+  :concurrency: 10
+
+# Development configuration  
+development:
+  :concurrency: 3
+
+# Test configuration
+test:
+  :concurrency: 2

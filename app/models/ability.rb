@@ -13,11 +13,14 @@ class Ability
       # Sales executive can read all users and update their own profile
       can :read, User
       can :update, User, id: user.id
+      # Sales executive can read offices
+      can :read, Office
       # Sales executive can manage customers
       can :manage, Customer
       # Sales executive can manage packages and addons
       can :manage, Package
       can :manage, Addon
+      can :manage, ChecklistItem
       # Sales executive can manage subscriptions
       can :manage, Subscription
       # Sales executive can manage all orders and add feedback
@@ -27,6 +30,8 @@ class Ability
       # Agent can read their own profile and update it
       can :read, User, id: user.id
       can :update, User, id: user.id
+      # Agent can read offices
+      can :read, Office
       # Agent can manage customers
       can :manage, Customer
       # Agent can read packages and addons
@@ -36,11 +41,16 @@ class Ability
       can :read, Subscription
       # Agent can read assigned orders and update status/actual times/notes
       can :read, Order, assigned_to_id: user.id
-      can [:update_status, :update], Order, assigned_to_id: user.id
+      can [:update_status, :update, :track_travel], Order, assigned_to_id: user.id
+      # Agent can manage journeys for their assigned orders
+      can :create, Journey
+      can :read, Journey, user_id: user.id
     elsif user.accountant?
       # Accountant can read all users and update their own profile
       can :read, User
       can :update, User, id: user.id
+      # Accountant can read offices
+      can :read, Office
       # Accountant can read customers
       can :read, Customer
       # Accountant can read packages and addons

@@ -67,13 +67,13 @@ class Api::V1::UsersController < ApplicationController
 
   def user_update_params
     if current_user.admin?
-      params.permit(:name, :email, :role)
+      params.permit(:name, :email, :role, :phone, :address, :employee_number, :home_latitude, :home_longitude, :office_id, :avatar)
     else
-      params.permit(:name, :email)
+      params.permit(:name, :email, :phone, :address, :employee_number, :home_latitude, :home_longitude, :office_id, :avatar)
     end
   end
 
   def user_create_params
-    params.permit(:name, :email, :password, :password_confirmation, :role)
+    params.permit(:name, :email, :password, :password_confirmation, :role, :phone, :address, :employee_number, :home_latitude, :home_longitude, :office_id, :avatar)
   end
 end

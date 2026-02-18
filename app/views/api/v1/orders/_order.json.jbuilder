@@ -34,11 +34,58 @@ json.extract! order,
               :feedback_submitted_at,
               :created_at,
               :updated_at,
-              :subscription_id
+              :subscription_id,
+              :received_amount,
+              :tip,
+              :district
 
 json.full_address order.full_address
 json.coordinates order.coordinates
 json.duration_in_minutes order.duration_in_minutes
+
+# Image URLs
+if order.before_images.attached?
+  json.before_images order.before_images.map { |img|
+    {
+      id: img.id,
+      url: rails_blob_url(img),
+      filename: img.filename.to_s,
+      content_type: img.content_type,
+      byte_size: img.byte_size,
+      thumbnail_url: rails_representation_url(img.variant(resize_to_limit: [200, 150]))
+    }
+  }
+else
+  json.before_images []
+end
+
+if order.after_images.attached?
+  json.after_images order.after_images.map { |img|
+    {
+      id: img.id,
+      url: rails_blob_url(img),
+      filename: img.filename.to_s,
+      content_type: img.content_type,
+      byte_size: img.byte_size,
+      thumbnail_url: rails_representation_url(img.variant(resize_to_limit: [200, 150]))
+    }
+  }
+else
+  json.after_images []
+end
+
+if order.customer_signature.attached?
+  json.customer_signature do
+    json.id order.customer_signature.id
+    json.url rails_blob_url(order.customer_signature)
+    json.filename order.customer_signature.filename.to_s
+    json.content_type order.customer_signature.content_type
+    json.byte_size order.customer_signature.byte_size
+    json.thumbnail_url rails_representation_url(order.customer_signature.variant(resize_to_limit: [400, 200]))
+  end
+else
+  json.customer_signature nil
+end
 
 # Customer details
 if order.customer

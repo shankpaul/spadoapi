@@ -10,6 +10,8 @@ class Package < ApplicationRecord
   has_many :orders, through: :order_packages
   has_many :subscriptions, dependent: :restrict_with_error
   has_many :subscription_packages, dependent: :destroy
+  has_many :package_checklist_items, dependent: :destroy
+  has_many :checklist_items, through: :package_checklist_items
 
   # Validations
   validates :name, presence: true

@@ -28,7 +28,12 @@ class Api::V1::AuthenticationController < ApplicationController
             expired: @user.expired?,
             sign_in_count: @user.sign_in_count,
             current_sign_in_at: @user.current_sign_in_at,
-            last_sign_in_at: @user.last_sign_in_at
+            last_sign_in_at: @user.last_sign_in_at,
+            phone: @user.phone,
+            address: @user.address,
+            employee_number: @user.employee_number,
+            home_coordinates: @user.home_coordinates,
+            avatar_url: @user.avatar.attached? ? rails_blob_url(@user.avatar) : nil
           }
         }, status: :ok
       else
@@ -68,7 +73,20 @@ class Api::V1::AuthenticationController < ApplicationController
       expired: current_user.expired?,
       sign_in_count: current_user.sign_in_count,
       current_sign_in_at: current_user.current_sign_in_at,
-      last_sign_in_at: current_user.last_sign_in_at
+      last_sign_in_at: current_user.last_sign_in_at,
+      phone: current_user.phone,
+      address: current_user.address,
+      employee_number: current_user.employee_number,
+      home_coordinates: current_user.home_coordinates,
+      office_id: current_user.office_id,
+      office: current_user.office ? {
+        id: current_user.office.id,
+        name: current_user.office.name,
+        latitude: current_user.office.latitude,
+        longitude: current_user.office.longitude,
+        active: current_user.office.active
+      } : nil,
+      avatar_url: current_user.avatar.attached? ? rails_blob_url(current_user.avatar) : nil
     }, status: :ok
   end
 

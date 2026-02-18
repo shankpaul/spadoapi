@@ -41,4 +41,31 @@ json.order do
       end
     end
   end
+  
+  # Include checklist items grouped by when (pre/post)
+  checklist = @order.checklist_items_grouped
+  json.checklist do
+    json.pre checklist[:pre] do |item|
+      json.extract! item, :name
+    end
+    json.post checklist[:post] do |item|
+      json.extract! item, :name
+    end
+  end
+  
+  # Include agent journeys
+  json.journeys @order.journeys.recent do |journey|
+    json.extract! journey, :id, :trip_type, :distance_km, :amount, :traveled_at
+    json.from_location do
+      json.latitude journey.from_latitude
+      json.longitude journey.from_longitude
+    end
+    json.to_location do
+      json.latitude journey.to_latitude
+      json.longitude journey.to_longitude
+    end
+    json.agent do
+      json.extract! journey.user, :id, :name, :email
+    end
+  end
 end

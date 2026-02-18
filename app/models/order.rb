@@ -20,6 +20,13 @@ class Order < ApplicationRecord
   has_many :order_status_logs, dependent: :destroy
   has_many :assignment_histories, dependent: :destroy
   has_many :subscription_orders, dependent: :destroy
+  has_many :journeys, dependent: :destroy
+
+  # ActiveStorage attachments
+  has_many_attached :before_images
+  has_many_attached :after_images
+  has_one_attached :customer_signature
+  has_one_attached :payment_proof
 
   # Validations
   validates :order_number, presence: true, uniqueness: true
@@ -30,14 +37,18 @@ class Order < ApplicationRecord
   validates :longitude, numericality: { greater_than_or_equal_to: -180, less_than_or_equal_to: 180, allow_nil: true }
   validates :rating, numericality: { only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: 5, allow_nil: true }
   validates :cancel_reason, presence: true, if: :cancelled?
+  validates :received_amount, numericality: { greater_than_or_equal_to: 0, allow_nil: true }
+  validates :tip, numericality: { greater_than_or_equal_to: 0, allow_nil: true }
   
   validate :validate_booking_times
   validate :validate_booking_availability, if: :should_validate_availability?
   validate :validate_feedback_on_completed_only
+  validate :validate_image_attachments
 
   # Callbacks
   before_validation :generate_order_number, on: :create
   before_validation :copy_gst_percentage_from_settings, on: :create
+  before_validation :extract_coordinates_from_map_link, if: :map_link_changed?
   after_create :update_customer_last_booked_at
   after_update :track_assignment_change, if: :saved_change_to_assigned_to_id?
   after_update :update_customer_last_booked_at, if: :saved_change_to_booking_date?
@@ -85,7 +96,10 @@ class Order < ApplicationRecord
     event :complete_service do
       transitions from: [:confirmed, :in_progress], to: :completed
       after do
-        update_column(:actual_end_time, Time.current) if actual_end_time.blank?
+        update_columns(
+          actual_end_time: (actual_end_time.presence || Time.current),
+          payment_status: 'paid'
+        )
         log_status_change(:in_progress, :completed)
       end
     end
@@ -124,6 +138,38 @@ class Order < ApplicationRecord
     !cancelled?
   end
 
+  def checklist_items_grouped
+    # Get all package IDs from this order
+    package_ids = order_packages.pluck(:package_id).uniq
+    return { pre: [], post: [] } if package_ids.empty?
+
+    # Get distinct active checklist items from all packages
+    items = ChecklistItem.joins(:packages)
+                        .where(packages: { id: package_ids })
+                        .active
+                        .distinct
+                        .order(:when, :position, :name)
+
+    {
+      pre: items.select(&:pre?),
+      post: items.select(&:post?)
+    }
+  end
+
+  def calculate_tip
+    return 0 unless received_amount.present? && total_price.present?
+    [received_amount - total_price, 0].max
+  end
+
+  def image_urls
+    {
+      before_images: before_images.attached? ? before_images.map { |img| rails_blob_url(img) } : [],
+      after_images: after_images.attached? ? after_images.map { |img| rails_blob_url(img) } : [],
+      customer_signature: customer_signature.attached? ? rails_blob_url(customer_signature) : nil,
+      payment_proof: payment_proof.attached? ? rails_blob_url(payment_proof) : nil
+    }
+  end
+
   private
 
   def generate_order_number
@@ -150,8 +196,51 @@ class Order < ApplicationRecord
     self.gst_percentage ||= Setting.gst_percentage || 0
   end
 
+  def extract_coordinates_from_map_link
+    return if map_link.blank?
+    
+    coords = parse_coordinates_from_google_maps_url(map_link)
+    if coords
+      self.latitude = coords[:latitude]
+      self.longitude = coords[:longitude]
+    end
+  end
+
+  def parse_coordinates_from_google_maps_url(url)
+    return nil if url.blank?
+    
+    # Pattern 1: @lat,lng,zoom format (e.g., https://www.google.com/maps/@12.9716,77.5946,15z)
+    if url.match?(/@(-?\d+\.\d+),(-?\d+\.\d+)/)
+      lat, lng = url.scan(/@(-?\d+\.\d+),(-?\d+\.\d+)/).first
+      return { latitude: lat.to_f, longitude: lng.to_f }
+    end
+    
+    # Pattern 2: ?q=lat,lng format (e.g., https://www.google.com/maps?q=12.9716,77.5946)
+    if url.match?(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/)
+      lat, lng = url.scan(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/).first
+      return { latitude: lat.to_f, longitude: lng.to_f }
+    end
+    
+    # Pattern 3: /place/.../@lat,lng format
+    if url.match?(/\/place\/[^@]*@(-?\d+\.\d+),(-?\d+\.\d+)/)
+      lat, lng = url.scan(/\/place\/[^@]*@(-?\d+\.\d+),(-?\d+\.\d+)/).first
+      return { latitude: lat.to_f, longitude: lng.to_f }
+    end
+    
+    # Pattern 4: ll=lat,lng format (e.g., https://www.google.com/maps?ll=12.9716,77.5946)
+    if url.match?(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/)
+      lat, lng = url.scan(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/).first
+      return { latitude: lat.to_f, longitude: lng.to_f }
+    end
+    
+    nil
+  end
+
   def validate_booking_times
     return unless booking_time_from && booking_time_to
+    
+    # Only validate if booking times or date are being changed (or on new records)
+    return unless new_record? || booking_time_from_changed? || booking_time_to_changed? || booking_date_changed?
     
     if booking_time_from >= booking_time_to
       errors.add(:booking_time_to, "must be after booking start time")
@@ -190,6 +279,57 @@ class Order < ApplicationRecord
   def validate_feedback_on_completed_only
     if (rating.present? || comments.present? || feedback_submitted_at.present?) && !completed?
       errors.add(:base, "Feedback can only be added to completed orders")
+    end
+  end
+
+  def validate_image_attachments
+    # Validate before_images
+    if before_images.attached?
+      before_images.each do |image|
+        unless image.content_type.in?(%w[image/jpeg image/jpg image/png image/gif])
+          errors.add(:before_images, 'must be a JPEG, PNG, or GIF image')
+        end
+        
+        # 10MB limit
+        if image.byte_size > 10.megabytes
+          errors.add(:before_images, 'must be less than 10MB')
+        end
+      end
+    end
+
+    # Validate after_images
+    if after_images.attached?
+      after_images.each do |image|
+        unless image.content_type.in?(%w[image/jpeg image/jpg image/png image/gif])
+          errors.add(:after_images, 'must be a JPEG, PNG, or GIF image')
+        end
+        
+        if image.byte_size > 10.megabytes
+          errors.add(:after_images, 'must be less than 10MB')
+        end
+      end
+    end
+
+    # Validate customer_signature
+    if customer_signature.attached?
+      unless customer_signature.content_type.in?(%w[image/jpeg image/jpg image/png image/gif])
+        errors.add(:customer_signature, 'must be a JPEG, PNG, or GIF image')
+      end
+      
+      if customer_signature.byte_size > 5.megabytes
+        errors.add(:customer_signature, 'must be less than 5MB')
+      end
+    end
+
+    # Validate payment_proof
+    if payment_proof.attached?
+      unless payment_proof.content_type.in?(%w[image/jpeg image/jpg image/png image/gif])
+        errors.add(:payment_proof, 'must be a JPEG, PNG, or GIF image')
+      end
+      
+      if payment_proof.byte_size > 5.megabytes
+        errors.add(:payment_proof, 'must be less than 5MB')
+      end
     end
   end
 

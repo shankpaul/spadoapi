@@ -10,9 +10,37 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_05_000001) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_18_172449) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "addons", force: :cascade do |t|
     t.string "name", null: false
@@ -41,6 +69,32 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_05_000001) do
     t.index ["order_id"], name: "index_assignment_histories_on_order_id"
   end
 
+  create_table "attendances", force: :cascade do |t|
+    t.bigint "agent_id", null: false
+    t.date "date", null: false
+    t.datetime "check_in_time", null: false
+    t.decimal "latitude", precision: 10, scale: 8
+    t.decimal "longitude", precision: 11, scale: 8
+    t.boolean "is_late", default: false
+    t.string "sync_status", default: "synced"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["agent_id", "date"], name: "index_attendances_on_agent_id_and_date", unique: true
+    t.index ["agent_id"], name: "index_attendances_on_agent_id"
+    t.index ["date"], name: "index_attendances_on_date"
+  end
+
+  create_table "checklist_items", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "when", null: false
+    t.boolean "active", default: true, null: false
+    t.integer "position", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_checklist_items_on_active"
+    t.index ["when"], name: "index_checklist_items_on_when"
+  end
+
   create_table "customers", force: :cascade do |t|
     t.string "name", null: false
     t.string "phone"
@@ -66,10 +120,55 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_05_000001) do
     t.index ["phone"], name: "index_customers_on_phone"
   end
 
+  create_table "end_of_day_logs", force: :cascade do |t|
+    t.bigint "agent_id", null: false
+    t.date "date", null: false
+    t.datetime "check_out_time", null: false
+    t.decimal "latitude", precision: 10, scale: 8
+    t.decimal "longitude", precision: 11, scale: 8
+    t.decimal "cash_in_hand", precision: 10, scale: 2, default: "0.0"
+    t.decimal "distance_travelled", precision: 10, scale: 2, default: "0.0"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["agent_id", "date"], name: "index_end_of_day_logs_on_agent_id_and_date", unique: true
+    t.index ["agent_id"], name: "index_end_of_day_logs_on_agent_id"
+    t.index ["date"], name: "index_end_of_day_logs_on_date"
+  end
+
+  create_table "journeys", force: :cascade do |t|
+    t.bigint "order_id", null: false
+    t.bigint "user_id", null: false
+    t.decimal "from_latitude", precision: 10, scale: 7, null: false
+    t.decimal "from_longitude", precision: 10, scale: 7, null: false
+    t.decimal "to_latitude", precision: 10, scale: 7, null: false
+    t.decimal "to_longitude", precision: 10, scale: 7, null: false
+    t.decimal "distance_km", precision: 10, scale: 2, null: false
+    t.decimal "amount", precision: 10, scale: 2
+    t.string "trip_type", default: "to_customer", null: false
+    t.datetime "traveled_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_id", "trip_type"], name: "index_journeys_on_order_id_and_trip_type", unique: true
+    t.index ["order_id"], name: "index_journeys_on_order_id"
+    t.index ["user_id"], name: "index_journeys_on_user_id"
+  end
+
   create_table "jwt_denylist", force: :cascade do |t|
     t.string "jti", null: false
     t.datetime "exp", null: false
     t.index ["jti"], name: "index_jwt_denylist_on_jti"
+  end
+
+  create_table "offices", force: :cascade do |t|
+    t.string "name", null: false
+    t.decimal "latitude", precision: 10, scale: 7, null: false
+    t.decimal "longitude", precision: 10, scale: 7, null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_offices_on_active"
+    t.index ["name"], name: "index_offices_on_name"
   end
 
   create_table "order_addons", force: :cascade do |t|
@@ -154,6 +253,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_05_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "subscription_id"
+    t.string "district"
+    t.decimal "received_amount", precision: 10, scale: 2
+    t.decimal "tip", precision: 10, scale: 2, default: "0.0"
     t.index ["assigned_to_id", "booking_date", "status"], name: "index_orders_on_agent_calendar"
     t.index ["assigned_to_id"], name: "index_orders_on_assigned_to_id"
     t.index ["bookable_type", "bookable_id"], name: "index_orders_on_bookable"
@@ -165,6 +267,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_05_000001) do
     t.index ["order_number"], name: "index_orders_on_order_number", unique: true
     t.index ["status"], name: "index_orders_on_status"
     t.index ["subscription_id"], name: "index_orders_on_subscription_id"
+  end
+
+  create_table "package_checklist_items", force: :cascade do |t|
+    t.bigint "package_id", null: false
+    t.bigint "checklist_item_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["checklist_item_id"], name: "index_package_checklist_items_on_checklist_item_id"
+    t.index ["package_id", "checklist_item_id"], name: "index_package_checklist_items_unique", unique: true
+    t.index ["package_id"], name: "index_package_checklist_items_on_package_id"
   end
 
   create_table "packages", force: :cascade do |t|
@@ -299,15 +411,28 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_05_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.decimal "home_latitude", precision: 10, scale: 7
+    t.decimal "home_longitude", precision: 10, scale: 7
+    t.string "phone"
+    t.text "address"
+    t.string "employee_number"
+    t.bigint "office_id"
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["office_id"], name: "index_users_on_office_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "assignment_histories", "orders"
   add_foreign_key "assignment_histories", "users", column: "assigned_by_id"
   add_foreign_key "assignment_histories", "users", column: "assigned_to_id"
+  add_foreign_key "attendances", "users", column: "agent_id"
+  add_foreign_key "end_of_day_logs", "users", column: "agent_id"
+  add_foreign_key "journeys", "orders"
+  add_foreign_key "journeys", "users"
   add_foreign_key "order_addons", "addons"
   add_foreign_key "order_addons", "orders"
   add_foreign_key "order_packages", "orders"
@@ -318,6 +443,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_05_000001) do
   add_foreign_key "orders", "subscriptions"
   add_foreign_key "orders", "users", column: "assigned_to_id"
   add_foreign_key "orders", "users", column: "cancelled_by_id"
+  add_foreign_key "package_checklist_items", "checklist_items"
+  add_foreign_key "package_checklist_items", "packages"
   add_foreign_key "subscription_addons", "addons"
   add_foreign_key "subscription_addons", "subscriptions"
   add_foreign_key "subscription_orders", "orders"
@@ -326,4 +453,5 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_05_000001) do
   add_foreign_key "subscription_packages", "subscriptions"
   add_foreign_key "subscriptions", "customers"
   add_foreign_key "subscriptions", "users", column: "created_by_id"
+  add_foreign_key "users", "offices"
 end

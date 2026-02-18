@@ -1,0 +1,65 @@
+{
+  "checklist_items": [
+    { "id": 1, "name": "Scratches / Dents Noted", "when": "pre", "active": true, "position": 1 },
+    { "id": 2, "name": "Valuables and personal belongings removed", "when": "pre", "active": true, "position": 2 },
+    { "id": 3, "name": "Paint Fade / Damage Inspection", "when": "pre", "active": true, "position": 3 },
+    { "id": 4, "name": "Photos Taken (Front, Rear, Left, Right, Dashboard)", "when": "pre", "active": true, "position": 4 },
+    { "id": 5, "name": "Exterior Foam Wash", "when": "post", "active": true, "position": 5 },
+    { "id": 6, "name": "Interior Vacuuming", "when": "post", "active": true, "position": 6 },
+    { "id": 7, "name": "Trunk Vacuuming", "when": "post", "active": true, "position": 7 },
+    { "id": 8, "name": "Interior Towel Cleaning", "when": "post", "active": true, "position": 8 },
+    { "id": 9, "name": "Exterior Towel Hand Dry", "when": "post", "active": true, "position": 9 },
+    { "id": 10, "name": "Glass Cleaning", "when": "post", "active": true, "position": 10 },
+    { "id": 11, "name": "Tire Dressing", "when": "post", "active": true, "position": 11 },
+    { "id": 12, "name": "Dashboard & Door Pad Cleaning", "when": "post", "active": true, "position": 12 },
+    { "id": 13, "name": "Interior Dashboard Polish", "when": "post", "active": true, "position": 13 },
+    { "id": 14, "name": "Door pad Polish", "when": "post", "active": true, "position": 14 },
+    { "id": 15, "name": "Interior Steam Cleaning", "when": "post", "active": true, "position": 15 },
+    { "id": 16, "name": "Spado Perfume Tag", "when": "post", "active": true, "position": 16 },
+    { "id": 17, "name": "Full Interior Cleaning", "when": "post", "active": true, "position": 17 },
+    { "id": 18, "name": "Leather Cleaning", "when": "post", "active": true, "position": 18 },
+    { "id": 19, "name": "Upholstery Dirt Cleaning", "when": "post", "active": true, "position": 19 },
+    { "id": 20, "name": "Roof Cleaning", "when": "post", "active": true, "position": 20 },
+    { "id": 21, "name": "Floor Cleaning", "when": "post", "active": true, "position": 21 },
+    { "id": 22, "name": "AC Vent Steaming", "when": "post", "active": true, "position": 22 },
+    { "id": 23, "name": "Premium Ceramic Wax Coat", "when": "post", "active": true, "position": 23 },
+    { "id": 24, "name": "Head Light Restoration/Polishing", "when": "post", "active": true, "position": 24 },
+    { "id": 25, "name": "Exterior Waxing", "when": "post", "active": true, "position": 25 },
+    { "id": 26, "name": "Exterior & Interior Body Polish", "when": "post", "active": true, "position": 26 },
+    { "id": 27, "name": "Engine Steam Cleaning", "when": "post", "active": true, "position": 27 },
+    { "id": 28, "name": "Rain Repellent Coating", "when": "post", "active": true, "position": 28 },
+    { "id": 29, "name": "Scratch Removal", "when": "post", "active": true, "position": 29 },
+    { "id": 30, "name": "Water Spots Removal", "when": "post", "active": true, "position": 30 },
+    { "id": 31, "name": "Equipment checked and returned", "when": "post", "active": true, "position": 31 }
+  ],
+  "packages": [
+    {
+      "name": "Spado Basic Wash",
+      "vehicle_type": "hatchback",
+      "unit_price": 499,
+      "active": true,
+      "checklist_item_ids": [5, 6, 7, 8, 9, 10, 11]
+    },
+    {
+      "name": "Spado Prime Wash",
+      "vehicle_type": "hatchback",
+      "unit_price": 799,
+      "active": true,
+      "checklist_item_ids": [5, 6, 7, 12, 13, 14, 15, 10, 16]
+    },
+    {
+      "name": "Spado Signature Detailing",
+      "vehicle_type": "hatchback",
+      "unit_price": 1499,
+      "active": true,
+      "checklist_item_ids": [5, 17, 18, 19, 20, 21, 15, 10, 16, 22, 23, 24]
+    },
+    {
+      "name": "Interior & Exterior Polishing",
+      "vehicle_type": "hatchback",
+      "unit_price": 1999,
+      "active": true,
+      "checklist_item_ids": [5, 25, 6, 7, 26, 8, 11, 10, 16]
+    }
+  ]
+}

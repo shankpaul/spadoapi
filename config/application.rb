@@ -35,5 +35,11 @@ module SpadoApi
     # Set timezone to India (IST - UTC+5:30)
     config.time_zone = 'Asia/Kolkata'
     config.active_record.default_timezone = :local
+
+    # Use Sidekiq for background jobs
+    config.active_job.queue_adapter = :sidekiq
+
+    # Journey travel allowance per kilometer
+    config.ta_amount = 3.0
   end
 end
